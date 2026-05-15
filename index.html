@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منسق الاختبارات الذكي | أ.كليب الزهراني</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- مكتبات معالجة الملفات -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #10b981;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        #exam-paper {
+            background-color: white;
+            min-height: 297mm;
+            width: 210mm;
+            margin: 0 auto;
+            /* توسيع الهامش الأيمن (18mm) ليكون مناسباً للتدبيس والمنظر الجمالي */
+            padding: 8mm 18mm 8mm 6mm; 
+            box-sizing: border-box;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            color: #000;
+        }
+
+        @media print {
+            @page { size: A4; margin: 5mm; } 
+            body { background: white !important; margin: 0; padding: 0; }
+            .no-print, header, #controlPanel, #toolbar { display: none !important; }
+            #previewArea { display: block !important; width: 100% !important; margin: 0 !important; }
+            .bg-slate-300 { 
+                background: transparent !important; 
+                padding: 0 !important; 
+                display: block !important; 
+                overflow: visible !important; 
+                min-height: auto !important;
+            }
+            #exam-paper { box-shadow: none !important; margin: 0 !important; width: 100% !important; padding: 0 !important; display: block !important; }
+        }
+
+        .glass-card { background: rgba(255, 255, 255, 0.98); border: 1px solid #e2e8f0; }
+        .section-title { position: relative; padding-right: 12px; }
+        .section-title::after { content: ''; position: absolute; right: 0; top: 15%; height: 70%; width: 4px; background: var(--primary); border-radius: 2px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        #textContent {
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            background-color: #f8fafc;
+        }
+        #textContent:empty:before {
+            content: attr(placeholder);
+            color: #94a3b8;
+            pointer-events: none;
+            display: block;
+            white-space: pre-wrap;
+        }
+        #textContent table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            background-color: #fff;
+        }
+        #textContent table, #textContent th, #textContent td {
+            border: 1px solid #cbd5e1;
+        }
+        #textContent th, #textContent td {
+            padding: 8px;
+            min-width: 50px;
+        }
+        #textContent img {
+            max-width: 100%;
+            max-height: 300px;
+            display: inline-block;
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #paper-content table td, #paper-content table th {
+            border: 1px solid #000 !important;
+            padding: 6px;
+        }
+        #paper-content table.header-table td, #paper-content table.header-table th {
+            border: none !important;
+            padding: 0 !important;
+        }
+
+        .correct-answer-marker {
+            color: #059669;
+            font-weight: 900;
+            padding: 0 3px;
+        }
+        .correct-answer-bg {
+            background-color: #ecfdf5 !important;
+            border-radius: 4px;
+            box-shadow: inset 0 0 0 1px #a7f3d0 !important;
+        }
+        
+        .hide-answers .correct-answer-marker {
+            display: none !important;
+        }
+        .hide-answers .correct-answer-bg {
+            background-color: transparent !important;
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6 custom-scrollbar">
+
+<div class="max-w-7xl mx-auto">
+    <!-- Header Area -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 no-print">
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-900 text-white p-3 rounded-2xl shadow-lg">
+                <i class="fa-solid fa-file-pen text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-extrabold text-blue-950 tracking-tight">منسق الاختبارات الجاهزة</h1>
+                <p class="text-blue-700 text-sm font-bold">إعداد: أ.كليب بن أحمد الزهراني</p>
+            </div>
+        </div>
+        <div class="bg-white px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-3">
+            <button onclick="document.getElementById('libraryModal').classList.remove('hidden'); loadLibraryUI();" class="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg border border-indigo-100 flex items-center gap-2 hover:bg-indigo-100 transition-all">
+                <i class="fa-solid fa-book-bookmark"></i> <span class="text-xs font-bold">مكتبتي (حفظ محلي)</span>
+            </button>
+        </div>
+    </header>
+
+    <div id="mainContainer">
+        <!-- Control Panel (الشاشة الأولى) -->
+        <div id="controlPanel" class="max-w-4xl mx-auto space-y-6 no-print transition-all duration-500">
+            
+            <div class="glass-card p-5 rounded-2xl shadow-sm space-y-4">
+                <h2 class="font-bold text-slate-700 flex items-center justify-between gap-2 section-title mb-2">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-paste text-blue-600"></i> أسئلة الاختبار
+                    </span>
+                    <button onclick="document.getElementById('randomGenModal').classList.remove('hidden')" class="bg-amber-100 text-amber-700 border border-amber-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-amber-200 transition-colors flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-shuffle"></i> توليد من بنك أسئلة
+                    </button>
+                </h2>
+                
+                <div class="flex flex-wrap gap-2 mb-1 border-b border-slate-100 pb-3">
+                    <button onclick="insertImage()" class="bg-slate-100 text-slate-700 border border-slate-200 px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-image"></i> صورة
+                    </button>
+                    <button onclick="insertTable()" class="bg-slate-100 text-slate-700 border border-slate-200 px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-table"></i> جدول
+                    </button>
+                    
+                    <div class="hidden sm:block border-r-2 border-slate-200 mx-1"></div>
+                    
+                    <button onclick="insertTemplate('mcq')" class="bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1 shadow-sm" title="نموذج خيارات">
+                        <i class="fa-solid fa-list-check"></i> خيارات
+                    </button>
+                    <button onclick="insertTemplate('tf')" class="bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1 shadow-sm" title="نموذج صح وخطأ">
+                        <i class="fa-solid fa-check-double"></i> صح/خطأ
+                    </button>
+                    <button onclick="insertTemplate('match')" class="bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1 shadow-sm" title="نموذج توصيل">
+                        <i class="fa-solid fa-arrows-turn-to-dots"></i> توصيل
+                    </button>
+                    <button onclick="insertTemplate('fill')" class="bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1 shadow-sm" title="نموذج إكمال فراغ">
+                        <i class="fa-solid fa-pen"></i> فراغات
+                    </button>
+                    <button onclick="insertTemplate('essay')" class="bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1 shadow-sm" title="نموذج مقالي">
+                        <i class="fa-solid fa-pen-clip"></i> مقالي
+                    </button>
+                    
+                    <div class="hidden sm:block border-r-2 border-slate-200 mx-1"></div>
+                    
+                    <button onclick="applySmartFormatting()" class="bg-purple-50 text-purple-700 border border-purple-100 px-3 py-2 rounded-lg text-xs font-bold hover:bg-purple-100 transition-colors flex items-center gap-1 shadow-sm" title="ترتيب الخيارات وإصلاح الأسطر المكسورة">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> تنسيق ذكي
+                    </button>
+
+                    <input type="file" id="inlineImageInput" accept="image/*" class="hidden" onchange="handleInlineImage(event)">
+                </div>
+
+                <div id="textContent" contenteditable="true" class="w-full p-5 text-sm border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 leading-loose custom-scrollbar" placeholder="الصق أسئلتك هنا أو استخدم أزرار النماذج العلوية..."></div>
+                <div id="uploadStatus" class="text-xs text-center hidden"></div>
+                
+                <div id="dropZone" class="border-2 border-dashed border-blue-200 rounded-xl p-3 text-center cursor-pointer hover:bg-blue-50 transition-all mt-2">
+                    <i class="fa-solid fa-file-word text-lg text-blue-300 mb-1"></i>
+                    <p class="text-[11px] font-medium text-slate-600">أو يمكنك رفع ملف Word / PDF لاستخراج نصه تلقائياً</p>
+                    <input type="file" id="fileInput" accept=".pdf,.docx,.txt" class="hidden">
+                </div>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl shadow-sm space-y-4">
+                <button id="toggleHeaderBtn" class="w-full flex justify-between items-center text-slate-700 font-bold text-sm">
+                    <span class="flex items-center gap-2 section-title">إعدادات الترويسة والتذييل</span>
+                    <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                </button>
+                <div id="headerSettings" class="space-y-3 pt-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="hR1" placeholder="المملكة العربية السعودية" class="p-2 text-xs bg-slate-50 border rounded-lg">
+                        <input type="text" id="hL1" placeholder="المادة: ..........." class="p-2 text-xs bg-slate-50 border rounded-lg">
+                        <input type="text" id="hR2" placeholder="وزارة التعليم" class="p-2 text-xs bg-slate-50 border rounded-lg">
+                        <input type="text" id="hL2" placeholder="الصف: ..........." class="p-2 text-xs bg-slate-50 border rounded-lg">
+                        <input type="text" id="hEduDept" placeholder="إدارة التعليم" value="إدارة تعليم ..............." class="p-2 text-xs bg-slate-50 border rounded-lg">
+                        <input type="text" id="hSchool" placeholder="المدرسة" value="مدرسة: ......................." class="p-2 text-xs bg-slate-50 border rounded-lg">
+                        <input type="text" id="hTime" placeholder="الزمن" value="الزمن: ..........." class="p-2 text-xs bg-slate-50 border rounded-lg">
+                        <input type="text" id="hDate" placeholder="التاريخ" value="التاريخ: ..... / ..... / 144 هـ" class="p-2 text-xs bg-slate-50 border rounded-lg">
+                    </div>
+                    <input type="text" id="examTitle" placeholder="اختبار الفصل الدراسي ..." class="w-full p-2 text-xs font-bold text-center bg-blue-50 border border-blue-100 rounded-lg">
+                    
+                    <div class="grid grid-cols-3 gap-2 border-t pt-3 mt-1 border-slate-100">
+                        <input type="text" id="hStudentName" value="اسم المتدرب: ...................................................." placeholder="اسم المتدرب" class="p-2 text-[10px] bg-slate-50 border rounded-lg">
+                        <input type="text" id="hAcademicNum" value="الرقم الأكاديمي: ......................." placeholder="الرقم الأكاديمي" class="p-2 text-[10px] bg-slate-50 border rounded-lg">
+                        <input type="text" id="hSection" value="الشعبة: .........." placeholder="الشعبة" class="p-2 text-[10px] bg-slate-50 border rounded-lg">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 border-t pt-3 mt-1 border-slate-100 bg-slate-50 p-3 rounded-lg">
+                        <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                            <input type="checkbox" id="showFooterSettings" checked class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                            إضافة (انتهت الأسئلة) وتوقيع المعلم
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" id="hTeacherTitle" value="معلم المادة:" placeholder="الصفة" class="p-2 text-xs bg-white border border-slate-200 rounded-lg w-1/3">
+                            <input type="text" id="hTeacherName" value="" placeholder="اسم المعلم / المدرب" class="p-2 text-xs bg-white border border-slate-200 rounded-lg flex-1">
+                            <button onclick="document.getElementById('signatureInput').click()" class="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-200 whitespace-nowrap transition-colors" title="إرفاق التوقيع">
+                                <i class="fa-solid fa-signature"></i>
+                            </button>
+                            <input type="file" id="signatureInput" accept="image/*" class="hidden">
+                        </div>
+                        <div id="sigPreviewContainer" class="col-span-1 md:col-span-2 hidden flex items-center justify-end gap-2 mt-1">
+                            <span class="text-[10px] font-bold text-slate-500">التوقيع:</span>
+                            <img id="sigPreviewImg" src="" class="h-6 object-contain rounded border border-slate-200 bg-white px-1">
+                            <button onclick="removeSignature()" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-xmark text-sm"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="p-2 border rounded-xl bg-slate-50 text-center flex flex-col items-center gap-2 mt-2">
+                        <img id="logoPreviewImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Ministry_of_Education_Saudi_Archive.svg/200px-Ministry_of_Education_Saudi_Arabia.svg.png" class="h-10 object-contain" alt="الشعار">
+                        <input type="file" id="logoInput" accept="image/*" class="hidden">
+                        <div class="flex gap-3">
+                            <button onclick="document.getElementById('logoInput').click()" class="text-[11px] font-bold text-blue-600 underline">تغيير الشعار</button>
+                            <button id="resetLogo" class="text-[10px] text-red-500 hover:underline">استعادة الافتراضي</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-4 rounded-2xl shadow-sm bg-blue-50 border-blue-100 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2 text-blue-800">
+                    <i class="fa-solid fa-layer-group text-lg"></i>
+                    <div>
+                        <h3 class="font-bold text-sm">تخطيط وعرض الخيارات</h3>
+                        <p class="text-[10px] opacity-80">تحكم في طريقة عرض خيارات الأسئلة المتعددة في الورقة</p>
+                    </div>
+                </div>
+                <select id="optionsLayout" class="p-2.5 bg-white border border-blue-200 rounded-lg text-xs font-bold text-slate-700 outline-none shadow-sm min-w-[200px]">
+                    <option value="auto">تلقائي (حسب طول النص)</option>
+                    <option value="two">إجبار: خيارين في كل سطر</option>
+                    <option value="one">إجبار: خيار واحد في كل سطر</option>
+                    <option value="four">إجبار: 4 خيارات في سطر واحد</option>
+                </select>
+            </div>
+
+            <button id="generateBtn" class="w-full bg-blue-900 hover:bg-blue-950 text-white font-bold py-4 rounded-2xl shadow-xl flex justify-center items-center gap-3 transition-all text-lg">
+                <i class="fa-solid fa-print"></i>
+                <span>تنسيق وترتيب ورقة الاختبار</span>
+            </button>
+        </div>
+
+        <!-- Preview Area -->
+        <div id="previewArea" class="hidden max-w-5xl mx-auto flex-col transition-all duration-500 w-full">
+            <div id="toolbar" class="glass-card p-4 rounded-2xl mb-5 flex justify-between items-center no-print flex-wrap gap-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="goBackToEdit()" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-200 transition-colors flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-arrow-right"></i> عودة للتعديل
+                    </button>
+                    <span class="text-sm font-bold text-slate-600 border-r-2 border-slate-200 pr-3">معاينة الورقة</span>
+                    
+                    <!-- زر إظهار/إخفاء الإجابات -->
+                    <button id="toggleAnswersBtn" onclick="toggleAnswers()" class="bg-emerald-100 text-emerald-700 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-200 transition-colors flex items-center gap-2 shadow-sm border-r-2 border-slate-200 pr-3" title="إخفاء أو إظهار علامة النجمة والتظليل">
+                        <i class="fa-solid fa-eye-slash"></i> <span>إخفاء الإجابات (*)</span>
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="saveToLibrary()" class="bg-emerald-50 text-emerald-600 px-3 py-2 rounded-xl text-xs font-bold border border-emerald-100 hover:bg-emerald-100"><i class="fa-solid fa-bookmark"></i> حفظ محلي</button>
+                    <button onclick="exportPDF()" class="bg-rose-50 text-rose-600 px-3 py-2 rounded-xl text-xs font-bold border border-rose-100 hover:bg-rose-100"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                    <button onclick="exportWord()" class="bg-blue-50 text-blue-600 px-3 py-2 rounded-xl text-xs font-bold border border-blue-100 hover:bg-blue-100"><i class="fa-solid fa-file-word"></i> Word</button>
+                </div>
+            </div>
+
+            <div class="bg-slate-300 p-4 rounded-3xl flex-1 flex justify-center overflow-auto shadow-inner min-h-[800px]">
+                <div id="exam-paper" class="hidden">
+                    <div id="paper-content"></div>
+                </div>
+                <div id="placeholder" class="flex flex-col items-center justify-center text-slate-400 py-32 text-center">
+                    <i class="fa-solid fa-file-lines text-8xl opacity-10 mb-6"></i>
+                    <h3 class="text-lg font-bold text-slate-500">الورقة جاهزة للتنسيق</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Random Generator Modal -->
+<div id="randomGenModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-amber-50">
+            <h3 class="font-bold text-amber-900 flex items-center gap-2"><i class="fa-solid fa-shuffle text-amber-600"></i> مولد الاختبار العشوائي من بنوك الأسئلة</h3>
+            <button onclick="document.getElementById('randomGenModal').classList.add('hidden')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        
+        <div class="p-5 flex-1 overflow-y-auto space-y-6 custom-scrollbar bg-slate-50">
+            
+            <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl text-center shadow-sm relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-10"><i class="fa-solid fa-microchip text-7xl text-blue-900"></i></div>
+                <h4 class="font-bold text-blue-800 mb-2 relative z-10"><i class="fa-solid fa-robot"></i> تصنيف الأسئلة الذكي (بدون إنترنت أو مفتاح)</h4>
+                <p class="text-xs text-blue-600 mb-4 relative z-10">ارفع ملف بنك أسئلة (Word أو PDF) عشوائي، وسيقوم النظام بقراءته، فرزه، وتوزيعه تلقائياً على المربعات بالأسفل بناءً على صيغة السؤال لتتمكن من السحب منها عشوائياً!</p>
+                <button onclick="document.getElementById('bankFileInput').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md transition-colors relative z-10">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> رفع ملف بنك الأسئلة الشامل
+                </button>
+                <input type="file" id="bankFileInput" accept=".pdf,.docx,.txt" class="hidden">
+                <div id="bankUploadStatus" class="text-xs font-bold text-blue-700 mt-3 hidden relative z-10"><i class="fa-solid fa-spinner fa-spin"></i> جاري القراءة والتحليل...</div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-bold text-slate-700"><i class="fa-solid fa-list-check text-blue-500"></i> بنك أسئلة الاختيار من متعدد</h4>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-bold text-slate-500">العدد المطلوب اختياره:</label>
+                        <input type="number" id="genMcqCount" value="0" min="0" class="w-16 p-1 border rounded text-center font-bold">
+                    </div>
+                </div>
+                <textarea id="genMcqText" rows="4" class="w-full p-3 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar" placeholder="الصق أسئلة الخيارات هنا..."></textarea>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-bold text-slate-700"><i class="fa-solid fa-check-double text-emerald-500"></i> بنك أسئلة صح وخطأ</h4>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-bold text-slate-500">العدد المطلوب اختياره:</label>
+                        <input type="number" id="genTfCount" value="0" min="0" class="w-16 p-1 border rounded text-center font-bold">
+                    </div>
+                </div>
+                <textarea id="genTfText" rows="4" class="w-full p-3 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 custom-scrollbar" placeholder="الصق أسئلة صح وخطأ هنا..."></textarea>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-bold text-slate-700"><i class="fa-solid fa-arrows-turn-to-dots text-purple-500"></i> بنك أسئلة التوصيل (المزاوجة)</h4>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-bold text-slate-500">العدد المطلوب اختياره:</label>
+                        <input type="number" id="genMatchCount" value="0" min="0" class="w-16 p-1 border rounded text-center font-bold">
+                    </div>
+                </div>
+                <textarea id="genMatchText" rows="4" class="w-full p-3 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 custom-scrollbar" placeholder="الصق جمل التوصيل هنا بحيث كل جملة وما يقابلها في سطر منفصل..."></textarea>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-bold text-slate-700"><i class="fa-solid fa-pen text-teal-500"></i> بنك أسئلة إكمال الفراغ</h4>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-bold text-slate-500">العدد المطلوب اختياره:</label>
+                        <input type="number" id="genFillCount" value="0" min="0" class="w-16 p-1 border rounded text-center font-bold">
+                    </div>
+                </div>
+                <textarea id="genFillText" rows="4" class="w-full p-3 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-teal-500 custom-scrollbar" placeholder="الصق أسئلة إكمال الفراغات هنا..."></textarea>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-bold text-slate-700"><i class="fa-solid fa-pen-clip text-rose-500"></i> بنك الأسئلة المقالية</h4>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-bold text-slate-500">العدد المطلوب اختياره:</label>
+                        <input type="number" id="genEssayCount" value="0" min="0" class="w-16 p-1 border rounded text-center font-bold">
+                    </div>
+                </div>
+                <textarea id="genEssayText" rows="4" class="w-full p-3 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-rose-500 custom-scrollbar" placeholder="الصق الأسئلة المقالية هنا..."></textarea>
+            </div>
+        </div>
+        
+        <div class="p-5 border-t border-slate-100 bg-white flex gap-3">
+            <button onclick="processRandomGeneration()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2 transition-colors">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> توليد وإدراج في المحرر
+            </button>
+            <button onclick="document.getElementById('randomGenModal').classList.add('hidden')" class="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold transition-colors">
+                إلغاء
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="alertModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
+        <h4 id="modalTitle" class="text-lg font-bold mb-2"></h4>
+        <div id="modalMsg" class="text-slate-500 text-sm mb-6 break-words"></div>
+        <button onclick="closeModal()" class="w-full py-3 bg-blue-900 text-white font-bold rounded-xl">موافق</button>
+    </div>
+</div>
+
+<div id="libraryModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
+            <h3 class="font-bold text-indigo-900 flex items-center gap-2"><i class="fa-solid fa-book-bookmark text-indigo-600"></i> مكتبتي</h3>
+            <button onclick="document.getElementById('libraryModal').classList.add('hidden')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <div id="libraryContent" class="p-5 flex-1 overflow-y-auto space-y-3 custom-scrollbar bg-slate-50"></div>
+    </div>
+</div>
+
+<div id="tableModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl">
+        <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-table text-blue-600"></i> إدراج جدول</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="text-xs font-bold text-slate-600 mb-1 block">عدد الصفوف</label>
+                <input type="number" id="tblRows" value="4" min="1" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-center">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-600 mb-1 block">عدد الأعمدة</label>
+                <input type="number" id="tblCols" value="3" min="1" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-center">
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="confirmInsertTable()" class="flex-1 bg-blue-600 text-white py-2.5 rounded-xl font-bold">إدراج الآن</button>
+                <button onclick="document.getElementById('tableModal').classList.add('hidden')" class="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-bold">إلغاء</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const DEFAULT_LOGO = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Ministry_of_Education_Saudi_Arabia.svg/200px-Ministry_of_Education_Saudi_Arabia.svg.png";
+    let logoBase64 = DEFAULT_LOGO;
+    let signatureBase64 = null;
+
+    function initPdfJs() { 
+        if (typeof window['pdfjs-dist/build/pdf'] !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js'; 
+        }
+    }
+    window.onload = initPdfJs;
+
+    document.getElementById('toggleHeaderBtn').addEventListener('click', () => {
+        document.getElementById('headerSettings').classList.toggle('hidden');
+    });
+
+    window.insertImage = function() { document.getElementById('inlineImageInput').click(); };
+    window.handleInlineImage = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('textContent').focus();
+            document.execCommand('insertHTML', false, `<div><br></div><div style="text-align:center;"><img src="${e.target.result}" alt="صورة مدرجة"></div><div><br></div>`);
+        };
+        reader.readAsDataURL(file);
+        event.target.value = ''; 
+    };
+
+    window.insertTable = function() { document.getElementById('tableModal').classList.remove('hidden'); };
+    window.confirmInsertTable = function() {
+        const rows = parseInt(document.getElementById('tblRows').value);
+        const cols = parseInt(document.getElementById('tblCols').value);
+        let tableHtml = '<div><br></div><table style="width:100%; text-align: center;"><tbody>';
+        for (let i = 0; i < rows; i++) {
+            tableHtml += '<tr>';
+            for (let j = 0; j < cols; j++) {
+                if (i === 0) tableHtml += '<th style="background-color: #f8fafc;">عنوان</th>';
+                else tableHtml += '<td>...</td>';
+            }
+            tableHtml += '</tr>';
+        }
+        tableHtml += '</tbody></table><div><br></div>';
+        document.getElementById('tableModal').classList.add('hidden');
+        document.getElementById('textContent').focus();
+        document.execCommand('insertHTML', false, tableHtml);
+    };
+
+    window.insertTemplate = function(type) {
+        document.getElementById('textContent').focus();
+        let templateHtml = '';
+        const brackets = `&nbsp; ( &nbsp; &nbsp; ) &nbsp;`;
+        
+        switch(type) {
+            case 'mcq':
+                templateHtml = `<div><br></div><div><b>اختر الإجابة الصحيحة مما يلي:</b></div><div>1- نص السؤال هنا؟</div><div>أ- خيار أول &nbsp; &nbsp; &nbsp; ب- خيار ثاني &nbsp; &nbsp; &nbsp; ج- خيار ثالث &nbsp; &nbsp; &nbsp; د- خيار رابع</div><div><br></div>`;
+                break;
+            case 'tf':
+                templateHtml = `<div><br></div><div><b>حدد العبارة الصحيحة مما يلي:</b></div><div>1- نص السؤال هنا؟ ${brackets}</div><div>2- نص السؤال هنا؟ ${brackets}</div><div><br></div>`;
+                break;
+            case 'match':
+                templateHtml = `<div><br></div><div><b>صل بين العمودين مما يلي:</b></div><table style="width:100%; text-align: center; border: 1px solid #000;"><tbody><tr><th style="background-color: #f8fafc; border: 1px solid #000; padding: 8px;">العمود (أ)</th><th style="background-color: #f8fafc; border: 1px solid #000; padding: 8px; width: 80px;">الإجابة</th><th style="background-color: #f8fafc; border: 1px solid #000; padding: 8px;">العمود (ب)</th></tr><tr><td style="border: 1px solid #000; padding: 8px;">1- العنصر الأول</td><td style="border: 1px solid #000; padding: 8px;">${brackets}</td><td style="border: 1px solid #000; padding: 8px;">أ- الخيار الأول</td></tr></tbody></table><div><br></div>`;
+                break;
+            case 'fill':
+                templateHtml = `<div><br></div><div><b>املأ الفراغ فيما يلي بما يناسب:</b></div><div>1- ........................... نص السؤال هنا؟</div><div><br></div>`;
+                break;
+            case 'essay':
+                templateHtml = `<div><br></div><div><b>أجب عن الأسئلة التالية:</b></div><div>1- نص السؤال المقالي هنا؟</div><div><br><br><br></div>`;
+                break;
+        }
+        document.execCommand('insertHTML', false, templateHtml);
+    };
+
+    window.applySmartFormatting = function() {
+        const editor = document.getElementById('textContent');
+        let html = editor.innerHTML;
+        if (!html.trim() || html === '<br>') return;
+
+        showModal("جاري المعالجة", "يتم الآن التنسيق الذكي: دمج الخيارات وإصلاح الأسطر المكسورة...");
+        
+        setTimeout(() => {
+            const assets = [];
+            html = html.replace(/<img[^>]*>/g, match => { assets.push(match); return `___ASSET_${assets.length - 1}___`; });
+            html = html.replace(/<table[\s\S]*?<\/table>/g, match => { assets.push(match); return `___ASSET_${assets.length - 1}___`; });
+            
+            let tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(div|p|h[1-6]|li)>/gi, '\n');
+            let plainText = tempDiv.textContent || tempDiv.innerText;
+            
+            plainText = plainText.replace(/(^|\s)(\(\s*(?:[أبجدهوزحطيكلمن]|هـ)\s*\))\s*\n\s*/gm, '$1$2 ');
+            
+            // إصلاح الخيارات المقلوبة من الـ PDF (يحتوي على كافة أشكال الشرطات)
+            plainText = plainText.replace(/(^|\s)[-\\.‑–—−]\s*([أبجدهوزحطيكلمن]|هـ)\s*/g, '$1$2- ');
+            // إصلاح الخيارات المفصولة بالمسافات
+            plainText = plainText.replace(/(^|\s)([أبجدهوزحطيكلمن]|هـ)\s+[-\\.‑–—−]\s+/g, '$1$2- ');
+            
+            // تعديل جذري لمشكلة النقطة في آخر السطر (تجاهل المسافات الفارغة تماماً وتجاوز اللخبطة)
+            plainText = plainText.replace(/([\u0600-\u06FFa-zA-Z0-9]+)\s*\.\s*([\u0600-\u06FFa-zA-Z0-9]+)\s*$/gm, '$1 $2.');
+            plainText = plainText.replace(/^\s*\.\s*([\u0600-\u06FFa-zA-Z0-9]+)/gm, '$1.');
+            plainText = plainText.replace(/([\u0600-\u06FF]+)\s*\n\s*([أ-ي]|هـ)\s*[-\\.‑–—−]\s*$/gm, '$1$2.');
+            plainText = plainText.replace(/([\u0600-\u06FF]+)\s+([أ-ي]|هـ)\s*[-\\.‑–—−]\s*$/gm, '$1$2.');
+
+            let lines = plainText.split('\n');
+            let newHtml = '';
+            lines.forEach(line => {
+                let t = line.trim();
+                if (!t) return;
+                let restored = t.replace(/___ASSET_(\d+)___/g, (m, id) => assets[id]);
+                newHtml += `<div>${restored}</div>`;
+            });
+            
+            editor.innerHTML = newHtml;
+            closeModal();
+        }, 300);
+    };
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function generateSectionHTML(textareaId, countId, sectionTitle, formatType) {
+        const text = document.getElementById(textareaId).value.trim();
+        const count = parseInt(document.getElementById(countId).value) || 0;
+
+        if (!text || count <= 0) return '';
+
+        let questionsBank = [];
+        let blocks = text.split(/\n\s*\n/);
+        
+        if (blocks.length > 1 && blocks.length >= count / 2) { 
+            questionsBank = blocks.map(q => q.trim()).filter(q => q !== '');
+        } else {
+            let lines = text.split('\n');
+            let currentQ = [];
+            const startRegex = /^((س\s*)?[\d٠-٩]+[\-\.\)]\s*)/; 
+
+            lines.forEach(line => {
+                let tLine = line.trim();
+                if(!tLine) return;
+                
+                if(startRegex.test(tLine)) {
+                    if(currentQ.length > 0) questionsBank.push(currentQ.join('<br>'));
+                    currentQ = [tLine];
+                } else {
+                    if(currentQ.length === 0) currentQ.push(tLine);
+                    else currentQ.push(tLine);
+                }
+            });
+            if(currentQ.length > 0) questionsBank.push(currentQ.join('<br>'));
+        }
+
+        if (questionsBank.length === 0 || (questionsBank.length === 1 && text.split('\n').length > 1)) {
+           questionsBank = text.split('\n').map(q => q.trim()).filter(q => q !== '');
+        }
+
+        if (questionsBank.length === 0) return '';
+
+        shuffleArray(questionsBank);
+        let selectedQuestions = questionsBank.slice(0, count);
+
+        let html = `<div><br></div><div><b>${sectionTitle}</b></div>`;
+        const brackets = `&nbsp; ( &nbsp; &nbsp; ) &nbsp;`;
+
+        if (formatType === 'match') {
+            html += `<table style="width:100%; text-align: center; border: 1px solid #000;"><tbody><tr><th style="background-color: #f8fafc; border: 1px solid #000; padding: 8px;">العمود (أ)</th><th style="background-color: #f8fafc; border: 1px solid #000; padding: 8px; width: 80px;">الإجابة</th><th style="background-color: #f8fafc; border: 1px solid #000; padding: 8px;">العمود (ب)</th></tr>`;
+            
+            let parsedMatch = selectedQuestions.map(q => {
+                let cleanText = q.replace(/<br>/g, ' '); 
+                let parts = cleanText.split(/[-=:]/);
+                let partA = parts[0] ? parts[0].trim() : cleanText;
+                let partB = parts.length > 1 ? parts.slice(1).join('-').trim() : '';
+                partA = partA.replace(/^((س\s*)?[\d٠-٩]+[\-\.\)]\s*)/, '');
+                return { a: partA, b: partB };
+            });
+
+            let answers = parsedMatch.map(item => item.b).filter(b => b !== '');
+            if(answers.length === 0) answers = parsedMatch.map(() => '...'); 
+            shuffleArray(answers);
+            
+            let letters = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي', 'ك', 'ل', 'م', 'ن'];
+
+            parsedMatch.forEach((item, index) => {
+                let letter = letters[index % letters.length];
+                let currentB = answers[index] || '...';
+                html += `<tr>
+                    <td style="border: 1px solid #000; padding: 8px;">${index + 1}- ${item.a}</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${brackets}</td>
+                    <td style="border: 1px solid #000; padding: 8px;">${letter}- ${currentB}</td>
+                </tr>`;
+            });
+            html += `</tbody></table><div><br></div>`;
+        } else {
+            selectedQuestions.forEach((q, index) => {
+                let cleanQ = q.replace(/^((س\s*)?[\d٠-٩]+[\-\.\)]\s*)/, '');
+                
+                if(formatType === 'essay') {
+                    html += `<div>${index + 1}- ${cleanQ}</div><div><br><br><br></div>`;
+                } else {
+                    html += `<div>${index + 1}- ${cleanQ}</div><div><br></div>`;
+                }
+            });
+        }
+        return html;
+    }
+
+    window.processRandomGeneration = function() {
+        let finalHtml = '';
+        let totalCount = 0;
+
+        const countIds = ['genMcqCount', 'genTfCount', 'genMatchCount', 'genFillCount', 'genEssayCount'];
+        countIds.forEach(id => totalCount += parseInt(document.getElementById(id).value) || 0);
+
+        if (totalCount === 0) {
+            showModal("تنبيه", "الرجاء إدخال عدد أكبر من الصفر في قسم واحد على الأقل.");
+            return;
+        }
+
+        finalHtml += generateSectionHTML('genMcqText', 'genMcqCount', 'اختر الإجابة الصحيحة مما يلي:', 'mcq');
+        finalHtml += generateSectionHTML('genTfText', 'genTfCount', 'حدد العبارة الصحيحة مما يلي:', 'tf');
+        finalHtml += generateSectionHTML('genMatchText', 'genMatchCount', 'صل بين العمودين مما يلي:', 'match');
+        finalHtml += generateSectionHTML('genFillText', 'genFillCount', 'املأ الفراغ فيما يلي بما يناسب:', 'fill');
+        finalHtml += generateSectionHTML('genEssayText', 'genEssayCount', 'أجب عن الأسئلة التالية:', 'essay');
+
+        if (finalHtml) {
+            document.getElementById('textContent').focus();
+            document.execCommand('insertHTML', false, finalHtml);
+            document.getElementById('randomGenModal').classList.add('hidden');
+            showModal("تم بنجاح", `تم سحب عدد ${totalCount} سؤال عشوائياً وتنسيقها في المحرر.`);
+        }
+    };
+
+    document.getElementById('dropZone').addEventListener('click', () => document.getElementById('fileInput').click());
+    
+    document.getElementById('signatureInput').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => { 
+            signatureBase64 = ev.target.result; 
+            document.getElementById('sigPreviewImg').src = signatureBase64;
+            document.getElementById('sigPreviewContainer').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    });
+
+    window.removeSignature = function() {
+        signatureBase64 = null;
+        document.getElementById('signatureInput').value = '';
+        document.getElementById('sigPreviewContainer').classList.add('hidden');
+    };
+
+    document.getElementById('logoInput').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => { logoBase64 = ev.target.result; document.getElementById('logoPreviewImg').src = logoBase64; };
+        reader.readAsDataURL(file);
+    });
+    document.getElementById('resetLogo').addEventListener('click', () => {
+        logoBase64 = DEFAULT_LOGO;
+        document.getElementById('logoPreviewImg').src = logoBase64;
+    });
+
+    document.getElementById('fileInput').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const status = document.getElementById('uploadStatus');
+        status.className = "text-xs text-center text-blue-600 mt-2 block"; status.innerHTML = 'جاري القراءة...';
+        try {
+            let text = "";
+            const fileName = file.name.toLowerCase();
+            if (fileName.endsWith('.pdf')) {
+                const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    text += content.items.map(it => it.str).join(' ') + '\n';
+                }
+            } else if (fileName.endsWith('.docx')) {
+                const res = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+                text = res.value;
+            } else if (fileName.endsWith('.txt')) { text = await file.text(); }
+            document.getElementById('textContent').innerHTML += text.replace(/\n/g, '<br>');
+            status.innerText = "✓ تم التحميل";
+            setTimeout(() => status.classList.add('hidden'), 3000);
+        } catch (err) { status.innerText = "✗ خطأ في القراءة"; }
+    });
+
+    document.getElementById('bankFileInput').addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const status = document.getElementById('bankUploadStatus');
+        status.classList.remove('hidden'); 
+        status.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري قراءة الملف...';
+        
+        try {
+            let text = "";
+            const fileName = file.name.toLowerCase();
+            if (fileName.endsWith('.pdf')) {
+                const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    text += content.items.map(it => it.str).join(' ') + '\n';
+                }
+            } else if (fileName.endsWith('.docx')) {
+                const res = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+                text = res.value;
+            } else if (fileName.endsWith('.txt')) { 
+                text = await file.text(); 
+            }
+            
+            status.innerHTML = '<i class="fa-solid fa-microchip"></i> جاري تحليل وتصنيف الأسئلة...';
+            
+            setTimeout(() => {
+                smartCategorizeQuestions(text);
+                status.innerHTML = '<i class="fa-solid fa-check-circle text-emerald-600"></i> تم تصنيف الأسئلة وتوزيعها بنجاح!';
+                setTimeout(() => { status.classList.add('hidden'); }, 4000);
+            }, 500);
+
+        } catch (err) { 
+            status.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-600"></i> خطأ في قراءة الملف!'; 
+            setTimeout(() => { status.classList.add('hidden'); }, 4000);
+        }
+        e.target.value = '';
+    });
+
+    function smartCategorizeQuestions(text) {
+        text = text.replace(/(^|\s)(\(\s*(?:[أبجدهوزحطيكلمن]|هـ)\s*\))\s*\n\s*/gm, '$1$2 ');
+        
+        text = text.replace(/(^|\s)[-\\.‑–—−]\s*([أبجدهوزحطيكلمن]|هـ)\s*/g, '$1$2- ');
+        text = text.replace(/(^|\s)([أبجدهوزحطيكلمن]|هـ)\s+[-\\.‑–—−]\s+/g, '$1$2- ');
+
+        text = text.replace(/([\u0600-\u06FFa-zA-Z0-9]+)\s*\.\s*([\u0600-\u06FFa-zA-Z0-9]+)\s*$/gm, '$1 $2.');
+        text = text.replace(/^\s*\.\s*([\u0600-\u06FFa-zA-Z0-9]+)/gm, '$1.');
+        text = text.replace(/([\u0600-\u06FF]+)\s*\n\s*([أ-ي]|هـ)\s*[-\\.‑–—−]\s*$/gm, '$1$2.');
+        text = text.replace(/([\u0600-\u06FF]+)\s+([أ-ي]|هـ)\s*[-\\.‑–—−]\s*$/gm, '$1$2.');
+        
+        let lines = text.split('\n');
+        let currentQ = [];
+        let questions = [];
+        const startRegex = /^((س\s*)?[\d٠-٩]+[\-\.\)]\s*)/;
+
+        lines.forEach(line => {
+            let tLine = line.trim();
+            if(!tLine) return;
+            if(tLine.includes('السؤال الأول') || tLine.includes('اختر الإجابة') || tLine.includes('ضع علامة')) return;
+
+            if(startRegex.test(tLine)) {
+                if(currentQ.length > 0) questions.push(currentQ.join('\n'));
+                currentQ = [tLine];
+            } else {
+                currentQ.push(tLine);
+            }
+        });
+        if(currentQ.length > 0) questions.push(currentQ.join('\n'));
+
+        if (questions.length <= 2 && text.split(/\n\s*\n/).length > 2) {
+           questions = text.split(/\n\s*\n/).map(q=>q.trim()).filter(q=>q!=='');
+        }
+
+        let mcq = [], tf = [], fill = [], essay = [];
+        const optLetters = '(?:[أبجدهوزحطيكلمن]|هـ)';
+        const mcqPattern = new RegExp(`(?:^|\\s)(?:[-\\.‑–—−]\\s*${optLetters}|${optLetters}\\s*[-\\.‑–—−]|\\(\\s*${optLetters}\\s*\\))`);
+
+        questions.forEach(q => {
+            let singleLine = q.replace(/\n/g, ' '); 
+            
+            if (/(\(\s*\)|\(\s*صح\s*\)|\(\s*خطأ\s*\)|\(\s*x\s*\)|\(\s*√\s*\))/i.test(singleLine) || singleLine.includes('صح أم خطأ') || singleLine.includes('صح أو خطأ')) {
+                tf.push(q);
+            }
+            else if (mcqPattern.test(singleLine) && (singleLine.includes('ب-') || singleLine.includes('ب.') || singleLine.includes('(ب)') || singleLine.includes(' ب '))) {
+                mcq.push(q);
+            }
+            else if (/\.{3,}/.test(singleLine) || /_{3,}/.test(singleLine)) {
+                fill.push(q);
+            }
+            else {
+                if(q.length > 10) essay.push(q);
+            }
+        });
+
+        const appendVal = (id, arr) => {
+            if(arr.length > 0) {
+                let el = document.getElementById(id);
+                el.value += (el.value.trim() ? '\n\n' : '') + arr.join('\n\n');
+            }
+        };
+
+        appendVal('genMcqText', mcq);
+        appendVal('genTfText', tf);
+        appendVal('genFillText', fill);
+        appendVal('genEssayText', essay);
+
+        showModal('تحليل البنك الذكي', `تم استخراج وتصنيف الأسئلة بنجاح:\n\n- ${mcq.length} سؤال اختيارات.\n- ${tf.length} سؤال صح وخطأ.\n- ${fill.length} سؤال إكمال فراغ.\n- ${essay.length} سؤال مقالي.\n\nحدد الآن العدد المطلوب من كل قسم واضغط على التوليد!`);
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', () => {
+        const editor = document.getElementById('textContent');
+        if(!editor.innerText.trim() && !editor.innerHTML.includes('<img') && !editor.innerHTML.includes('<table')) return;
+        renderExam();
+        document.getElementById('controlPanel').classList.add('hidden');
+        document.getElementById('previewArea').classList.remove('hidden');
+        document.getElementById('previewArea').classList.add('flex');
+        document.getElementById('placeholder').classList.add('hidden');
+        document.getElementById('exam-paper').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    window.goBackToEdit = function() {
+        document.getElementById('previewArea').classList.add('hidden');
+        document.getElementById('previewArea').classList.remove('flex');
+        document.getElementById('controlPanel').classList.remove('hidden');
+    };
+
+    let answersVisible = true;
+    window.toggleAnswers = function() {
+        const paper = document.getElementById('exam-paper');
+        const btn = document.getElementById('toggleAnswersBtn');
+        answersVisible = !answersVisible;
+        if (answersVisible) {
+            paper.classList.remove('hide-answers');
+            btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> <span>إخفاء الإجابات (*)</span>';
+            btn.className = 'bg-emerald-100 text-emerald-700 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-200 transition-colors flex items-center gap-2 shadow-sm border-r-2 border-slate-200 pr-3';
+        } else {
+            paper.classList.add('hide-answers');
+            btn.innerHTML = '<i class="fa-solid fa-eye"></i> <span>إظهار الإجابات (*)</span>';
+            btn.className = 'bg-amber-100 text-amber-700 px-3 py-2 rounded-xl text-xs font-bold hover:bg-amber-200 transition-colors flex items-center gap-2 shadow-sm border-r-2 border-slate-200 pr-3';
+        }
+    };
+
+    function renderExam() {
+        const editor = document.getElementById('textContent');
+        const clone = editor.cloneNode(true);
+
+        const images = [];
+        clone.querySelectorAll('img').forEach((img, i) => {
+            images.push(img.src);
+            const marker = document.createTextNode(`\n___SYS_IMG_${i}___\n`);
+            img.parentNode.replaceChild(marker, img);
+        });
+
+        const tables = [];
+        clone.querySelectorAll('table').forEach((table, i) => {
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.margin = '4px 0';
+            table.style.textAlign = 'center';
+            table.querySelectorAll('th, td').forEach(cell => {
+                cell.style.border = '1px solid #000';
+                cell.style.padding = '4px';
+                let cellHtml = cell.innerHTML;
+                if (cellHtml.includes('*')) {
+                    cell.classList.add('correct-answer-bg');
+                }
+                cellHtml = cellHtml.replace(/\*/g, '<span class="correct-answer-marker" style="display:inline-block; margin:0 3px;">*</span>');
+                
+                // عزل الأقواس إجبارياً لمنعها من الانقلاب (حتى داخل الجداول)
+                cellHtml = cellHtml.replace(/\(([^)]*)\)/g, '&#x200F;(&#x200F;$1&#x200F;)&#x200F;');
+                cell.innerHTML = cellHtml;
+            });
+            tables.push(table.outerHTML);
+            const marker = document.createTextNode(`\n___SYS_TABLE_${i}___\n`);
+            table.parentNode.replaceChild(marker, table);
+        });
+
+        let htmlString = clone.innerHTML;
+        htmlString = htmlString.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(div|p|h[1-6]|li|tr)>/gi, '\n');
+        let tempWrapper = document.createElement('div');
+        tempWrapper.innerHTML = htmlString;
+        let rawText = tempWrapper.textContent || tempWrapper.innerText || "";
+        
+        rawText = rawText.replace(/([\u0600-\u06FFa-zA-Z0-9]+)\s*\.\s*([\u0600-\u06FFa-zA-Z0-9]+)\s*$/gm, '$1 $2.');
+        rawText = rawText.replace(/^\s*\.\s*([\u0600-\u06FFa-zA-Z0-9]+)/gm, '$1.');
+        rawText = rawText.replace(/([\u0600-\u06FF]+)\s*\n\s*([أ-ي]|هـ)\s*[-\\.‑–—−]\s*$/gm, '$1$2.');
+        rawText = rawText.replace(/([\u0600-\u06FF]+)\s+([أ-ي]|هـ)\s*[-\\.‑–—−]\s*$/gm, '$1$2.');
+        rawText = rawText.replace(/(^|\s)(\(\s*(?:[أبجدهوزحطيكلمن]|هـ)\s*\))\s*\n\s*/gm, '$1$2 ');
+
+        rawText = rawText.replace(/(^|\s)[-\\.‑–—−]\s*([أبجدهوزحطيكلمن]|هـ)\s*/g, '$1$2- ');
+        rawText = rawText.replace(/(^|\s)([أبجدهوزحطيكلمن]|هـ)\s+[-\\.‑–—−]\s+/g, '$1$2- ');
+
+        let lines = rawText.split(/\r?\n|\r/);
+        
+        const v = id => document.getElementById(id).value;
+        const fixRTL = (s) => '&#x200F;' + (s||'').trim().replace(/ /g, '&nbsp;') + '&#x200F;';
+        const vf = id => fixRTL(v(id));
+
+        let formattedText = '';
+        let questionCounter = 1;
+
+        const optionsLayoutChoice = document.getElementById('optionsLayout').value;
+        let currentQuestionBuffer = '';
+        let isBuildingQuestion = false;
+        let currentOptionsBuffer = [];
+
+        function flushOptions() {
+            if (currentOptionsBuffer.length > 0) {
+                let itemWidth = '100%';
+                if (optionsLayoutChoice === 'auto') {
+                    let maxLen = Math.max(...currentOptionsBuffer.map(o => o.rawText.length));
+                    if (maxLen <= 15) itemWidth = '24%';       
+                    else if (maxLen <= 35) itemWidth = '49%';  
+                    else itemWidth = '100%';                   
+                } else if (optionsLayoutChoice === 'two') {
+                    itemWidth = '49%';
+                } else if (optionsLayoutChoice === 'one') {
+                    itemWidth = '100%';
+                } else if (optionsLayoutChoice === 'four') {
+                    itemWidth = '24%';
+                }
+
+                let rowHtml = currentOptionsBuffer.map(opt => {
+                    // الضرب القاضية للشرطة: يتم وضع الحرف في صندوق، والشرطة في صندوق آخر منفصل لمنع أي احتمال لعكسهما
+                    return `<div class="${opt.isCorrect ? 'correct-answer-bg' : ''}" style="width: ${itemWidth}; display: flex; padding: 2px 4px; box-sizing: border-box; font-size: 13px; font-weight: 500; color: #000; align-items: flex-start;">
+                                <span style="flex-shrink:0; font-weight:bold; white-space: nowrap; margin-left:4px; display:flex; direction:rtl;">
+                                    <span style="display:inline-block;">${opt.letter}</span><span style="display:inline-block; margin-right:2px;">-</span>
+                                </span>
+                                <span style="flex-grow:1; word-break: break-word;">${opt.text || '&nbsp;'}</span>
+                            </div>`;
+                }).join('');
+                
+                let outHtml = `<div style="display:flex; flex-wrap: wrap; justify-content: flex-start; direction:rtl; clear: both; width: 100%; gap: 1%; margin-top: 2px; margin-bottom: 4px;">${rowHtml}</div>`;
+                
+                if (isBuildingQuestion) currentQuestionBuffer += outHtml;
+                else formattedText += outHtml;
+                
+                currentOptionsBuffer = [];
+            }
+        }
+
+        function flushBuffer() {
+            flushOptions(); 
+            if (isBuildingQuestion) {
+                formattedText += `<div style="page-break-inside: avoid; break-inside: avoid; clear: both; margin-bottom: 4px; width: 100%;">${currentQuestionBuffer}</div>`;
+                currentQuestionBuffer = '';
+                isBuildingQuestion = false;
+            }
+        }
+        
+        const optLetters = '(?:[أبجدهوزحطيكلمن]|هـ)';
+        const optPattern = `(?<=^|\\s)(?:[-\\.‑–—−]\\s*${optLetters}|${optLetters}\\s*[-\\.‑–—−]|\\(\\s*${optLetters}\\s*\\))`;
+        const markerCheck = new RegExp(optPattern, 'g');
+
+        lines.forEach(line => {
+            let tLine = line.trim();
+            if (!tLine) return;
+
+            const imgMatch = tLine.match(/^___SYS_IMG_(\d+)___$/);
+            if (imgMatch) {
+                flushBuffer();
+                formattedText += `<div style="text-align:center; clear:both; page-break-inside: avoid; break-inside: avoid;"><img src="${images[imgMatch[1]]}" style="max-height: 180px; max-width: 100%; border-radius: 6px; margin: 4px auto; border: 1px solid #cbd5e1;"></div>`;
+                return;
+            }
+
+            const tableMatch = tLine.match(/^___SYS_TABLE_(\d+)___$/);
+            if (tableMatch) {
+                flushBuffer();
+                formattedText += `<div style="page-break-inside: avoid; break-inside: avoid; clear:both; overflow-x: auto;">${tables[tableMatch[1]]}</div>`;
+                return;
+            }
+
+            let safeLine = line.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+            safeLine = safeLine.replace(/ {3,}|\u00A0{3,}/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+            
+            // عزل الأقواس في كل سطر
+            safeLine = safeLine.replace(/\(([^)]*)\)/g, '&#x200F;(&#x200F;$1&#x200F;)&#x200F;');
+
+            let markerMatches = tLine.match(markerCheck);
+            if (markerMatches && markerMatches.length >= 2) {
+                const mcqRegex = new RegExp(`(${optPattern})\\s*([\\s\\S]*?)(?=${optPattern}|$)`, 'g');
+                let matches = [...tLine.matchAll(mcqRegex)];
+                
+                matches.forEach(m => {
+                    let letterRaw = m[1].replace(/[-\\.()‑–—−]/g, '').replace(/<[^>]*>?/gm, '').trim(); 
+                    let textPart = m[2].trim();
+                    let isCorrect = textPart.includes('*');
+                    textPart = textPart.replace(/\*/g, '<span class="correct-answer-marker" style="display:inline-block; margin:0 3px;">*</span>');
+                    
+                    // عزل الأقواس داخل الخيارات
+                    textPart = textPart.replace(/\(([^)]*)\)/g, '&#x200F;(&#x200F;$1&#x200F;)&#x200F;');
+                    
+                    currentOptionsBuffer.push({
+                        letter: letterRaw,
+                        text: textPart,
+                        isCorrect: isCorrect,
+                        rawText: m[2].replace(/<[^>]*>?/gm, '').trim()
+                    });
+                });
+                return; 
+            }
+
+            const headerPhrases = ['السؤال الأول', 'السؤال الثاني', 'السؤال الثالث', 'السؤال الرابع', 'السؤال الخامس', 'السؤال السادس', 'السؤال السابع', 'السؤال الثامن', 'السؤال التاسع', 'السؤال العاشر', 'أولاً', 'ثانياً', 'ثالثاً', 'رابعاً', 'خامساً', 'سادساً', 'اختر الإجابة', 'حدد العبارة', 'املأ الفراغ', 'أكمل الفراغ', 'زاوج', 'صل بين', 'أجب عن', 'صل من', 'ضع علامة'];
+            let isHeader = headerPhrases.some(phrase => tLine.includes(phrase));
+            
+            if (isHeader && tLine.match(/^((س\s*)?[\d٠-٩]+[\-\.\)]\s*)/)) {
+                isHeader = false;
+            }
+
+            let qRegex = /^((س\s*[\d٠-٩]+)|([\d٠-٩]+\s*[\-\.\)]))/;
+            let isQuestion = qRegex.test(tLine) || tLine.endsWith('؟') || tLine.endsWith('?');
+
+            if (isHeader) {
+                flushBuffer();
+                questionCounter = 1;
+                formattedText += `<div style="background-color: #f8fafc; border-right: 4px solid #1e3a8a; border-bottom: 1px solid #e2e8f0; padding: 4px 8px; margin-top: 6px; margin-bottom: 4px; font-weight: 800; font-size: 14px; color: #000; border-radius: 3px; page-break-inside: avoid; clear: both;">${safeLine.replace(/\*/g, '<span class="correct-answer-marker">*</span>')}</div>`;
+            } 
+            else if (isQuestion) {
+                flushBuffer();
+                isBuildingQuestion = true;
+                
+                let cleanQ = tLine.replace(qRegex, '').trim();
+                if (cleanQ.startsWith('-') || cleanQ.startsWith('.')) cleanQ = cleanQ.substring(1).trim();
+                cleanQ = cleanQ.replace(/\*/g, '<span class="correct-answer-marker" style="display:inline-block; margin:0 3px;">*</span>');
+                
+                // عزل الأقواس في الأسئلة
+                cleanQ = cleanQ.replace(/\(([^)]*)\)/g, '&#x200F;(&#x200F;$1&#x200F;)&#x200F;');
+                
+                currentQuestionBuffer += `
+                    <div style="border-top: 1px dashed #cbd5e1; margin-top: 4px; padding-top: 4px; clear: both; display: flex; direction: rtl; align-items: flex-start;">
+                        <b style="color: #000; font-size: 13px; font-weight: 700; flex-shrink: 0; min-width: 20px; text-align: right; display:flex; direction:rtl;">
+                            <span style="display:inline-block;">${questionCounter}</span><span style="display:inline-block; margin-right:2px; margin-left:2px;">-</span>
+                        </b>
+                        <b style="color: #000; font-size: 13px; font-weight: 700; flex-grow: 1;">
+                            ${cleanQ || safeLine.replace(/\*/g, '<span class="correct-answer-marker">*</span>')}
+                        </b>
+                    </div>`;
+                questionCounter++;
+            } 
+            else {
+                let singleLetterMatch = tLine.match(new RegExp(`^\\s*(${optPattern})`));
+                if (singleLetterMatch) {
+                    let letterRaw = singleLetterMatch[1].replace(/[-\\.()‑–—−]/g, '').replace(/<[^>]*>?/gm, '').trim();
+                    let textPart = tLine.substring(singleLetterMatch[0].length).trim();
+                    let isCorrect = textPart.includes('*');
+                    
+                    textPart = textPart.replace(/\*/g, '<span class="correct-answer-marker" style="display:inline-block; margin:0 3px;">*</span>');
+                    textPart = textPart.replace(/\(([^)]*)\)/g, '&#x200F;(&#x200F;$1&#x200F;)&#x200F;');
+                    
+                    currentOptionsBuffer.push({
+                        letter: letterRaw,
+                        text: textPart,
+                        isCorrect: isCorrect,
+                        rawText: tLine.substring(singleLetterMatch[0].length).replace(/<[^>]*>?/gm, '').trim()
+                    });
+                    
+                } else {
+                    flushOptions(); 
+                    let outHtml = `<div style="padding-right: 25px; margin-bottom: 2px; color: #000; font-size: 13px; font-weight: 500; clear: both;">${safeLine.replace(/\*/g, '<span class="correct-answer-marker">*</span>')}</div>`;
+                    
+                    if (isBuildingQuestion) currentQuestionBuffer += outHtml;
+                    else formattedText += outHtml;
+                }
+            }
+        });
+        
+        flushBuffer(); 
+
+        const showFooter = document.getElementById('showFooterSettings').checked;
+        const teacherTitle = document.getElementById('hTeacherTitle').value.trim();
+        const teacherName = document.getElementById('hTeacherName').value.trim();
+        let footerHtml = '';
+        if (showFooter) {
+            let sigHtml = signatureBase64 ? `<img src="${signatureBase64}" style="max-height: 40px; display:inline-block; vertical-align: middle; margin-right: 10px;">` : '';
+            footerHtml = `
+            <div style="margin-top: 10px; border-top: 2px solid #1e3a8a; padding-top: 8px; text-align: center; font-weight: bold; font-size: 13px; page-break-inside: avoid; clear: both; color: #000;">
+                <p style="color: #1e3a8a; margin-bottom: 4px;"><i class="fa-solid fa-check-circle"></i> انتهت الأسئلة، مع تمنياتي لكم بالتوفيق والنجاح</p>
+                ${(teacherTitle || teacherName || signatureBase64) ? `<div style="font-size: 13px; display: flex; align-items: center; justify-content: center;">${teacherTitle} <span style="font-family: 'Tajawal', sans-serif; font-size: 14px; margin-right: 10px; margin-left: 5px;">${teacherName}</span> ${sigHtml}</div>` : ''}
+            </div>`;
+        }
+
+        let html = `
+        <table class="header-table" style="width: 100%; border-bottom: 2px solid #1e3a8a; margin-bottom: 6px; direction: rtl; border-collapse: collapse;">
+            <tr>
+                <td style="width:33%; text-align:center; vertical-align:top; font-size:12px; font-weight:bold; line-height:1.4; color:#000; border: none;">${vf('hR1')}<br>${vf('hR2')}<br>${vf('hEduDept')}<br>${vf('hSchool')}</td>
+                <td style="width:34%; text-align:center; vertical-align:top; border: none;">
+                    <img src="${logoBase64}" style="height:70px; max-width:100%; object-fit:contain; margin: 0 auto;">
+                    <div style="margin-top: 4px; font-size:13px; font-weight:900; color:#000;">${v('examTitle')}</div>
+                </td>
+                <td style="width:33%; text-align:left; vertical-align:top; font-size:12px; font-weight:bold; line-height:1.4; color:#000; border: none;"><div style="display:inline-block; text-align:right;">${vf('hL1')}<br>${vf('hL2')}<br>${vf('hTime')}<br>${vf('hDate')}</div></td>
+            </tr>
+        </table>
+        <div style="border:1px solid #000; padding:4px 8px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; direction:rtl; font-size: 13px; font-weight: 800; color:#000;">
+            <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
+                <div style="flex: 2; text-align: right;">${vf('hStudentName')}</div>
+                <div style="flex: 1.5; text-align: center;">${vf('hAcademicNum')}</div>
+                <div style="flex: 1; text-align: left;">${vf('hSection')}</div>
+            </div>
+            <div style="border:1px solid #000; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink: 0; background-color: #fff; margin-left: 15px;">
+                <div style="width: 14px; border-top: 1.5px solid #000;"></div>
+            </div>
+        </div>
+        <div style="direction:rtl; text-align:right; font-size:13px; line-height:1.35; font-family:'Tajawal', sans-serif; color:#000;">
+            ${formattedText}
+            ${footerHtml}
+        </div>`;
+        document.getElementById('paper-content').innerHTML = html;
+    }
+
+    window.saveToLibrary = function() {
+        const editorContent = document.getElementById('textContent').innerHTML;
+        if(!editorContent.trim()) return;
+        const title = document.getElementById('examTitle').value || 'اختبار بدون عنوان';
+        const newExam = { id: Date.now().toString(), title: title, text: editorContent, logo: logoBase64, signature: signatureBase64, date: new Date().toLocaleDateString('ar-SA') };
+        let library = JSON.parse(localStorage.getItem('myExamsLibrary') || '[]');
+        library.push(newExam);
+        localStorage.setItem('myExamsLibrary', JSON.stringify(library));
+        showModal("نجاح", "تم حفظ الاختبار في متصفحك بنجاح.");
+    };
+
+    window.loadLibraryUI = function() {
+        const container = document.getElementById('libraryContent');
+        let library = JSON.parse(localStorage.getItem('myExamsLibrary') || '[]');
+        if (library.length === 0) { container.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm">المكتبة فارغة حالياً.</div>'; return; }
+        library.sort((a, b) => b.id - a.id);
+        container.innerHTML = library.map(exam => `
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center hover:border-indigo-300 transition-colors">
+                <div><h4 class="font-bold text-slate-800 text-sm mb-1">${exam.title}</h4><span class="text-[10px] text-slate-400">${exam.date}</span></div>
+                <div class="flex gap-2">
+                    <button onclick="loadFromLibrary('${exam.id}')" class="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold">استرجاع</button>
+                    <button onclick="deleteFromLibrary('${exam.id}')" class="bg-rose-50 text-rose-600 px-3 py-1.5 rounded-lg text-xs"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>`).join('');
+        document.getElementById('libraryModal').classList.remove('hidden');
+    };
+
+    window.loadFromLibrary = function(id) {
+        let library = JSON.parse(localStorage.getItem('myExamsLibrary') || '[]');
+        const exam = library.find(e => e.id === id);
+        if(exam) {
+            document.getElementById('textContent').innerHTML = exam.text;
+            if(exam.logo) logoBase64 = exam.logo;
+            
+            if(exam.signature) {
+                signatureBase64 = exam.signature;
+                document.getElementById('sigPreviewImg').src = signatureBase64;
+                document.getElementById('sigPreviewContainer').classList.remove('hidden');
+            } else {
+                removeSignature();
+            }
+
+            document.getElementById('examTitle').value = exam.title;
+            renderExam();
+            document.getElementById('libraryModal').classList.add('hidden');
+            document.getElementById('controlPanel').classList.add('hidden');
+            document.getElementById('previewArea').classList.remove('hidden');
+            document.getElementById('previewArea').classList.add('flex');
+            document.getElementById('placeholder').classList.add('hidden');
+            document.getElementById('exam-paper').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    window.deleteFromLibrary = function(id) {
+        let library = JSON.parse(localStorage.getItem('myExamsLibrary') || '[]');
+        library = library.filter(e => e.id !== id);
+        localStorage.setItem('myExamsLibrary', JSON.stringify(library));
+        loadLibraryUI(); 
+    };
+
+    window.exportPDF = function() { 
+        showModal("جاري المعالجة", "يتم الآن تجهيز وتحميل ملف الـ PDF، يرجى الانتظار لثوانٍ معدودة...");
+        
+        const element = document.getElementById('exam-paper');
+        const fileName = document.getElementById('examTitle').value ? document.getElementById('examTitle').value + '.pdf' : 'اختبار.pdf';
+        
+        const originalShadow = element.style.boxShadow;
+        element.style.boxShadow = 'none';
+
+        const opt = { 
+            margin: 0, 
+            filename: fileName, 
+            image: { type: 'jpeg', quality: 1.0 }, 
+            html2canvas: { scale: 2, useCORS: true, logging: false }, 
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+        };
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+            element.style.boxShadow = originalShadow;
+            closeModal();
+        }).catch(err => {
+            closeModal();
+            showModal("خطأ", "عذراً، حدث خطأ أثناء توليد ملف الـ PDF.");
+        });
+    };
+    
+    window.exportWord = function() { 
+        const blob = new Blob(['\ufeff', document.getElementById("exam-paper").innerHTML], {type:'application/msword'});
+        const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "exam.doc"; link.click();
+    };
+    
+    window.showModal = function(title, msg) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalMsg').innerText = msg; document.getElementById('alertModal').classList.remove('hidden'); };
+    window.closeModal = function() { document.getElementById('alertModal').classList.add('hidden'); };
+</script>
+</body>
+</html>
