@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منسق الاختبارات الذكي | أ.كليب الزهراني</title>
+    <title>منسق الاختبارات الذكي | أ.كليب بن أحمد بن ضيف الله الزهراني</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- مكتبات معالجة الملفات -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -25,19 +24,17 @@
             color: #1e293b;
         }
 
-        /* تنسيق ورقة الاختبار - تم تغيير الخط للرسمي وتعديل الهوامش */
+        /* تنسيق ورقة الاختبار */
         #exam-paper {
             background-color: white;
             min-height: 297mm;
             width: 210mm;
             margin: 0 auto;
-            /* الهامش الأيمن 12mm ليكون مناسباً للتدبيس دون مبالغة */
-            padding: 8mm 12mm 8mm 6mm; 
             box-sizing: border-box;
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
             color: #000;
-            font-family: Arial, Helvetica, sans-serif !important; /* الخط الرسمي المعتمد */
+            font-family: Arial, Helvetica, sans-serif !important;
         }
 
         @media print {
@@ -52,7 +49,7 @@
                 overflow: visible !important; 
                 min-height: auto !important;
             }
-            #exam-paper { box-shadow: none !important; margin: 0 !important; width: 100% !important; padding: 0 !important; display: block !important; }
+            #exam-paper { box-shadow: none !important; margin: 0 !important; width: 100% !important; display: block !important; }
         }
 
         .glass-card { background: rgba(255, 255, 255, 0.98); border: 1px solid #e2e8f0; }
@@ -128,15 +125,14 @@
 <body class="p-4 md:p-6 custom-scrollbar">
 
 <div class="max-w-7xl mx-auto">
-    <!-- Header Area -->
     <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 no-print">
         <div class="flex items-center gap-4">
             <div class="bg-blue-900 text-white p-3 rounded-2xl shadow-lg">
                 <i class="fa-solid fa-file-pen text-2xl"></i>
             </div>
             <div>
-                <h1 class="text-2xl font-extrabold text-blue-950 tracking-tight">منسق الاختبارات الجاهزة</h1>
-                <p class="text-blue-700 text-sm font-bold">إعداد: أ.كليب بن أحمد الزهراني</p>
+                <h1 class="text-2xl font-extrabold text-blue-950 tracking-tight">منسق الاختبارات الذكي</h1>
+                <p class="text-blue-700 text-sm font-bold">إعداد: أ.كليب بن أحمد بن ضيف الله الزهراني</p>
             </div>
         </div>
         <div class="bg-white px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-3">
@@ -147,7 +143,6 @@
     </header>
 
     <div id="mainContainer">
-        <!-- Control Panel (الشاشة الأولى) -->
         <div id="controlPanel" class="max-w-4xl mx-auto space-y-6 no-print transition-all duration-500">
             
             <div class="glass-card p-5 rounded-2xl shadow-sm space-y-4">
@@ -267,8 +262,7 @@
                             <button id="resetLogo" class="text-[10px] text-red-500 hover:underline">استعادة الافتراضي</button>
                         </div>
                     </div>
-
-                    <!-- أزرار حفظ واستعادة الترويسة الافتراضية -->
+                    
                     <div class="flex flex-col sm:flex-row gap-2 mt-2 pt-3 border-t border-slate-200">
                         <button onclick="saveHeaderDefaults()" class="flex-1 bg-indigo-600 text-white px-3 py-2.5 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors flex justify-center items-center gap-2 shadow-sm">
                             <i class="fa-solid fa-floppy-disk"></i> حفظ كإعدادات افتراضية
@@ -280,11 +274,25 @@
                 </div>
             </div>
 
-            <!-- لوحة التحكم الجديدة بالخطوط والمقاسات -->
             <div class="glass-card p-4 rounded-2xl shadow-sm bg-white border-slate-200">
-                <h3 class="font-bold text-slate-700 text-sm flex items-center gap-2 mb-3 border-b pb-2"><i class="fa-solid fa-font text-indigo-500"></i> إعدادات الخطوط والمقاسات</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div class="col-span-2">
+                <h3 class="font-bold text-slate-700 text-sm flex items-center gap-2 mb-3 border-b pb-2"><i class="fa-solid fa-sliders text-indigo-500"></i> الإعدادات المتقدمة (الخطوط، الأرقام، والهوامش)</h3>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1">تنسيق الخيارات</label>
+                        <select id="optFormat" class="w-full p-2 bg-slate-50 border rounded-lg text-[11px] font-bold">
+                            <option value="dash">أ- (متبوع بشرطة)</option>
+                            <option value="bracket">(أ) (بين قوسين)</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1">لغة الأرقام</label>
+                        <select id="numFormat" class="w-full p-2 bg-slate-50 border rounded-lg text-[11px] font-bold">
+                            <option value="en">الإنجليزية (1, 2, 3)</option>
+                            <option value="ar">العربية (١, ٢, ٣)</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
                         <label class="text-[10px] font-bold text-slate-500 block mb-1">خط الترويسة والبيانات</label>
                         <select id="fntHeader" class="w-full p-2 bg-slate-50 border rounded-lg text-[11px] font-bold">
                             <option value="'AdvertisingBold', 'A_AdvertisingBold', 'A-AdvertisingBold', Arial, sans-serif">أدفيرتازينق (عريض)</option>
@@ -292,33 +300,56 @@
                             <option value="'Tajawal', sans-serif">Tajawal (عصري)</option>
                         </select>
                     </div>
-                    <div class="col-span-2">
-                        <label class="text-[10px] font-bold text-slate-500 block mb-1">خط الأسئلة والخيارات</label>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1">خط الأسئلة</label>
                         <select id="fntBody" class="w-full p-2 bg-slate-50 border rounded-lg text-[11px] font-bold">
                             <option value="Arial, Helvetica, sans-serif">Arial (رسمي)</option>
                             <option value="'Tajawal', sans-serif">Tajawal (عصري)</option>
                             <option value="'AdvertisingBold', 'A_AdvertisingBold', Arial, sans-serif">أدفيرتازينق (عريض)</option>
                         </select>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-5 gap-2 mb-4 border-t pt-3">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 block mb-1">حجم الترويسة</label>
-                        <input type="number" id="szHeader" value="14" class="w-full p-2 bg-slate-50 border rounded-lg text-xs text-center font-bold">
+                        <label class="text-[9px] font-bold text-slate-500 block mb-1">حجم الترويسة</label>
+                        <input type="number" id="szHeader" value="14" class="w-full p-1.5 bg-slate-50 border rounded-lg text-xs text-center font-bold">
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 block mb-1">حجم بيانات الطالب</label>
-                        <input type="number" id="szStudent" value="15" class="w-full p-2 bg-slate-50 border rounded-lg text-xs text-center font-bold">
+                        <label class="text-[9px] font-bold text-slate-500 block mb-1">حجم الطالب</label>
+                        <input type="number" id="szStudent" value="15" class="w-full p-1.5 bg-slate-50 border rounded-lg text-xs text-center font-bold">
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 block mb-1">حجم العناوين (س1)</label>
-                        <input type="number" id="szSection" value="16" class="w-full p-2 bg-slate-50 border rounded-lg text-xs text-center font-bold">
+                        <label class="text-[9px] font-bold text-slate-500 block mb-1">حجم العناوين</label>
+                        <input type="number" id="szSection" value="16" class="w-full p-1.5 bg-slate-50 border rounded-lg text-xs text-center font-bold">
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 block mb-1">حجم الأسئلة</label>
-                        <input type="number" id="szQuestion" value="15" class="w-full p-2 bg-slate-50 border rounded-lg text-xs text-center font-bold">
+                        <label class="text-[9px] font-bold text-slate-500 block mb-1">حجم الأسئلة</label>
+                        <input type="number" id="szQuestion" value="15" class="w-full p-1.5 bg-slate-50 border rounded-lg text-xs text-center font-bold">
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 block mb-1">حجم الخيارات</label>
-                        <input type="number" id="szOption" value="16" class="w-full p-2 bg-slate-50 border rounded-lg text-xs text-center font-bold">
+                        <label class="text-[9px] font-bold text-slate-500 block mb-1">حجم الخيارات</label>
+                        <input type="number" id="szOption" value="16" class="w-full p-1.5 bg-slate-50 border rounded-lg text-xs text-center font-bold">
+                    </div>
+                </div>
+
+                <h4 class="text-[10px] font-bold text-slate-600 mb-2 border-t pt-2">التحكم في هوامش الورقة (بالميليمتر mm)</h4>
+                <div class="grid grid-cols-4 gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-500 block mb-1 text-center">أعلى</label>
+                        <input type="number" id="marginTop" value="8" class="w-full p-1.5 bg-white border rounded-lg text-xs text-center font-bold shadow-sm">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-500 block mb-1 text-center">يمين (التدبيس)</label>
+                        <input type="number" id="marginRight" value="12" class="w-full p-1.5 bg-white border rounded-lg text-xs text-center font-bold shadow-sm">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-500 block mb-1 text-center">أسفل</label>
+                        <input type="number" id="marginBottom" value="8" class="w-full p-1.5 bg-white border rounded-lg text-xs text-center font-bold shadow-sm">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-500 block mb-1 text-center">يسار</label>
+                        <input type="number" id="marginLeft" value="6" class="w-full p-1.5 bg-white border rounded-lg text-xs text-center font-bold shadow-sm">
                     </div>
                 </div>
             </div>
@@ -345,7 +376,6 @@
             </button>
         </div>
 
-        <!-- Preview Area -->
         <div id="previewArea" class="hidden max-w-5xl mx-auto flex-col transition-all duration-500 w-full">
             <div id="toolbar" class="glass-card p-4 rounded-2xl mb-5 flex justify-between items-center no-print flex-wrap gap-4">
                 <div class="flex items-center gap-3">
@@ -354,7 +384,6 @@
                     </button>
                     <span class="text-sm font-bold text-slate-600 border-r-2 border-slate-200 pr-3">معاينة الورقة</span>
                     
-                    <!-- زر إظهار/إخفاء الإجابات -->
                     <button id="toggleAnswersBtn" onclick="toggleAnswers()" class="bg-emerald-100 text-emerald-700 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-200 transition-colors flex items-center gap-2 shadow-sm border-r-2 border-slate-200 pr-3" title="إخفاء أو إظهار علامة النجمة والتظليل">
                         <i class="fa-solid fa-eye-slash"></i> <span>إخفاء الإجابات (*)</span>
                     </button>
@@ -379,7 +408,6 @@
     </div>
 </div>
 
-<!-- Random Generator Modal -->
 <div id="randomGenModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-amber-50">
@@ -516,27 +544,47 @@
         }
     }
     
-    // استدعاء تهيئة الـ PDF وتحميل الإعدادات الافتراضية عند فتح الصفحة
     window.onload = function() {
         initPdfJs();
         loadHeaderDefaults();
     };
 
-    // دوال حفظ واستعادة الترويسة والخطوط
+    // فلتر ذكي لتغيير الأرقام دون المساس بالأكواد البرمجية
+    function localizeNumbers(text, format) {
+        if (!text) return text;
+        // تنظيف الشوائب والرموز المخفية القديمة تماماً لكي لا تتلف ملف الـ PDF
+        let str = text.toString().replace(/&#x(?:200|٢٠٠)F;/gi, '').replace(/\u200F/g, '');
+        if (format !== 'ar') return str;
+        
+        const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+        let temp = document.createElement('div');
+        temp.innerHTML = str;
+        
+        function walk(node) {
+            if (node.nodeType === 3) {
+                node.nodeValue = node.nodeValue.replace(/[0-9]/g, w => arabicNumbers[+w]);
+            } else if (node.nodeType === 1) {
+                for (let child of node.childNodes) walk(child);
+            }
+        }
+        walk(temp);
+        return temp.innerHTML;
+    }
+
     window.saveHeaderDefaults = function() {
         const settings = { textInputs: {}, selectInputs: {}, checkboxes: {}, logo: logoBase64, signature: signatureBase64 };
         
-        const tInputs = ['hR1', 'hL1', 'hR2', 'hL2', 'hEduDept', 'hSchool', 'hTime', 'hDate', 'examTitle', 'hStudentName', 'hAcademicNum', 'hSection', 'hHeaderTrainerName', 'hTeacherTitle', 'hTeacherName', 'szHeader', 'szStudent', 'szSection', 'szQuestion', 'szOption'];
+        const tInputs = ['hR1', 'hL1', 'hR2', 'hL2', 'hEduDept', 'hSchool', 'hTime', 'hDate', 'examTitle', 'hStudentName', 'hAcademicNum', 'hSection', 'hHeaderTrainerName', 'hTeacherTitle', 'hTeacherName', 'szHeader', 'szStudent', 'szSection', 'szQuestion', 'szOption', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
         tInputs.forEach(id => { const el = document.getElementById(id); if(el) settings.textInputs[id] = el.value; });
 
-        const sInputs = ['fntHeader', 'fntBody', 'optionsLayout'];
+        const sInputs = ['fntHeader', 'fntBody', 'optionsLayout', 'numFormat', 'optFormat'];
         sInputs.forEach(id => { const el = document.getElementById(id); if(el) settings.selectInputs[id] = el.value; });
 
         const cInputs = ['toggleHeaderTrainer', 'showFooterSettings'];
         cInputs.forEach(id => { const el = document.getElementById(id); if(el) settings.checkboxes[id] = el.checked; });
 
         localStorage.setItem('myExamDefaults', JSON.stringify(settings));
-        showModal("تم الحفظ بنجاح", "تم حفظ جميع بيانات الترويسة والتذييل، الشعار، التوقيع، وإعدادات الخطوط. ستظهر هذه الإعدادات تلقائياً في كل مرة تفتح فيها الأداة.");
+        showModal("تم الحفظ بنجاح", "تم حفظ جميع بيانات الترويسة والتذييل، الشعار، التوقيع، وإعدادات الخطوط والمقاسات والهوامش. ستظهر هذه الإعدادات تلقائياً في كل مرة تفتح فيها الأداة.");
     };
 
     window.loadHeaderDefaults = function() {
@@ -675,11 +723,8 @@
             
             plainText = plainText.replace(/(^|\s)(\(\s*(?:[أبجدهوزحطيكلمن]|هـ)\s*\))\s*\n\s*/gm, '$1$2 ');
             
-            // إصلاح الخيارات المقلوبة
             plainText = plainText.replace(/(^|\s)[-\\.‑–—−]\s*([أبجدهوزحطيكلمن]|هـ)\s*/g, '$1$2- ');
             plainText = plainText.replace(/(^|\s)([أبجدهوزحطيكلمن]|هـ)\s+[-\\.‑–—−]\s+/g, '$1$2- ');
-            
-            // تم حذف الكود الذي كان يتسبب في لخبطة النقطة بين الكلمتين تماماً!
 
             let lines = plainText.split('\n');
             let newHtml = '';
@@ -1019,6 +1064,9 @@
             img.parentNode.replaceChild(marker, img);
         });
 
+        const v = id => document.getElementById(id) ? document.getElementById(id).value : '';
+        const numFmt = v('numFormat') || 'en';
+        
         const tables = [];
         clone.querySelectorAll('table').forEach((table, i) => {
             table.style.width = '100%';
@@ -1033,7 +1081,11 @@
                     cell.classList.add('correct-answer-bg');
                 }
                 cellHtml = cellHtml.replace(/\*/g, '<span class="correct-answer-marker" style="display:inline-block; margin:0 3px;">*</span>');
-                cellHtml = cellHtml.replace(/\(([^)]*)\)/g, '&#x200F;(&#x200F;$1&#x200F;)&#x200F;');
+                
+                // استخدام الأقواس المانعة للانعكاس
+                cellHtml = cellHtml.replace(/\(([^)]*)\)/g, '&#xFF08;$1&#xFF09;');
+                
+                cellHtml = localizeNumbers(cellHtml, numFmt);
                 cell.innerHTML = cellHtml;
             });
             tables.push(table.outerHTML);
@@ -1047,15 +1099,11 @@
         tempWrapper.innerHTML = htmlString;
         let rawText = tempWrapper.textContent || tempWrapper.innerText || "";
         
-        // تم حذف الكود الذي كان يلخبط مكان النقطة
-
         let lines = rawText.split(/\r?\n|\r/);
         
-        const v = id => document.getElementById(id) ? document.getElementById(id).value : '';
-        const fixRTL = (s) => '&#x200F;' + (s||'').trim().replace(/ /g, '&nbsp;') + '&#x200F;';
-        const vf = id => fixRTL(v(id));
+        const fixRTL = (s) => s ? s.trim().replace(/ /g, '&nbsp;') : '';
+        const vf = id => fixRTL(localizeNumbers(v(id), numFmt));
 
-        // سحب قيم الخطوط والمقاسات من لوحة التحكم
         const fH = v('fntHeader') || "'AdvertisingBold', 'A_AdvertisingBold', Arial, sans-serif";
         const fB = v('fntBody') || "Arial, Helvetica, sans-serif";
         const sH = v('szHeader') || "14";
@@ -1063,11 +1111,18 @@
         const sSec = v('szSection') || "16";
         const sQ = v('szQuestion') || "15";
         const sO = v('szOption') || "16";
+        
+        const mT = v('marginTop') || "8";
+        const mR = v('marginRight') || "12";
+        const mB = v('marginBottom') || "8";
+        const mL = v('marginLeft') || "6";
+        document.getElementById('exam-paper').style.padding = `${mT}mm ${mR}mm ${mB}mm ${mL}mm`;
 
         let formattedText = '';
         let questionCounter = 1;
 
         const optionsLayoutChoice = document.getElementById('optionsLayout').value;
+        const optFormatChoice = document.getElementById('optFormat').value;
         let currentQuestionBuffer = '';
         let isBuildingQuestion = false;
         let currentOptionsBuffer = [];
@@ -1089,12 +1144,18 @@
                 }
 
                 let rowHtml = currentOptionsBuffer.map(opt => {
-                    // تطبيق الخطوط والمقاسات الديناميكية على الخيارات
+                    let letterDisplay = '';
+                    if (optFormatChoice === 'bracket') {
+                        letterDisplay = `<span style="display:inline-block;">&#xFF08;${opt.letter}&#xFF09;</span>`;
+                    } else {
+                        letterDisplay = `<span style="display:inline-block;">${opt.letter}</span><span style="display:inline-block; margin-right:2px;">-</span>`;
+                    }
+
                     return `<div class="${opt.isCorrect ? 'correct-answer-bg' : ''}" style="width: ${itemWidth}; display: flex; padding: 2px 4px; box-sizing: border-box; font-family: ${fB}; font-size: ${sO}px; font-weight: 600; color: #000; align-items: flex-start;">
                                 <span style="flex-shrink:0; font-weight:bold; white-space: nowrap; margin-left:4px; display:flex; direction:rtl;">
-                                    <span style="display:inline-block;">${opt.letter}</span><span style="display:inline-block; margin-right:2px;">-</span>
+                                    ${letterDisplay}
                                 </span>
-                                <span style="flex-grow:1; word-break: break-word;">${opt.text || '&nbsp;'}</span>
+                                <span style="flex-grow:1; word-break: break-word;">${localizeNumbers(opt.text || '&nbsp;', numFmt)}</span>
                             </div>`;
                 }).join('');
                 
@@ -1140,10 +1201,9 @@
 
             let safeLine = line.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
             safeLine = safeLine.replace(/ {3,}|\u00A0{3,}/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
-            safeLine = safeLine.replace(/\(([^)]*)\)/g, '&#x200F;(&#x200F;$1&#x200F;)&#x200F;');
             
-            // إضافة RLM في نهاية السطر لضمان بقاء النقطة في اليسار إذا كانت آخر شيء
-            safeLine = safeLine + '&#x200F;';
+            // استخدام الأقواس المانعة للانعكاس
+            safeLine = safeLine.replace(/\(([^)]*)\)/g, '&#xFF08;$1&#xFF09;');
 
             let markerMatches = tLine.match(markerCheck);
             if (markerMatches && markerMatches.length >= 2) {
@@ -1155,11 +1215,11 @@
                     let textPart = m[2].trim();
                     let isCorrect = textPart.includes('*');
                     textPart = textPart.replace(/\*/g, '<span class="correct-answer-marker" style="display:inline-block; margin:0 3px;">*</span>');
-                    textPart = textPart.replace(/\(([^)]*)\)/g, '&#x200F;(&#x200F;$1&#x200F;)&#x200F;');
+                    textPart = textPart.replace(/\(([^)]*)\)/g, '&#xFF08;$1&#xFF09;');
                     
                     currentOptionsBuffer.push({
                         letter: letterRaw,
-                        text: textPart + '&#x200F;', // تثبيت النقطة
+                        text: textPart,
                         isCorrect: isCorrect,
                         rawText: m[2].replace(/<[^>]*>?/gm, '').trim()
                     });
@@ -1180,8 +1240,7 @@
             if (isHeader) {
                 flushBuffer();
                 questionCounter = 1;
-                // تطبيق مقاس وخط العناوين الديناميكي
-                formattedText += `<div style="background-color: #f8fafc; border-right: 4px solid #1e3a8a; border-bottom: 1px solid #e2e8f0; padding: 4px 8px; margin-top: 6px; margin-bottom: 4px; font-weight: 800; font-family: ${fB}; font-size: ${sSec}px; color: #000; border-radius: 3px; page-break-inside: avoid; clear: both;">${safeLine.replace(/\*/g, '<span class="correct-answer-marker">*</span>')}</div>`;
+                formattedText += `<div style="background-color: #f8fafc; border-right: 4px solid #1e3a8a; border-bottom: 1px solid #e2e8f0; padding: 4px 8px; margin-top: 6px; margin-bottom: 4px; font-weight: 800; font-family: ${fB}; font-size: ${sSec}px; color: #000; border-radius: 3px; page-break-inside: avoid; clear: both;">${localizeNumbers(safeLine.replace(/\*/g, '<span class="correct-answer-marker">*</span>'), numFmt)}</div>`;
             } 
             else if (isQuestion) {
                 flushBuffer();
@@ -1190,16 +1249,15 @@
                 let cleanQ = tLine.replace(qRegex, '').trim();
                 if (cleanQ.startsWith('-') || cleanQ.startsWith('.')) cleanQ = cleanQ.substring(1).trim();
                 cleanQ = cleanQ.replace(/\*/g, '<span class="correct-answer-marker" style="display:inline-block; margin:0 3px;">*</span>');
-                cleanQ = cleanQ.replace(/\(([^)]*)\)/g, '&#x200F;(&#x200F;$1&#x200F;)&#x200F;');
+                cleanQ = cleanQ.replace(/\(([^)]*)\)/g, '&#xFF08;$1&#xFF09;');
                 
-                // تطبيق مقاس وخط الأسئلة الديناميكي مع تغميق الخط الفاصل وتوضيحه للطباعة
                 currentQuestionBuffer += `
                     <div style="border-top: 1.5px dashed #64748b; margin-top: 6px; padding-top: 6px; clear: both; display: flex; direction: rtl; align-items: flex-start;">
                         <b style="color: #000; font-family: ${fB}; font-size: ${sQ}px; font-weight: 700; flex-shrink: 0; min-width: 20px; text-align: right; display:flex; direction:rtl;">
-                            <span style="display:inline-block;">${questionCounter}</span><span style="display:inline-block; margin-right:2px; margin-left:4px;">-</span>
+                            <span style="display:inline-block;">${localizeNumbers(questionCounter, numFmt)}</span><span style="display:inline-block; margin-right:2px; margin-left:4px;">-</span>
                         </b>
                         <b style="color: #000; font-family: ${fB}; font-size: ${sQ}px; font-weight: 700; flex-grow: 1;">
-                            ${(cleanQ || safeLine.replace(/\*/g, '<span class="correct-answer-marker">*</span>')) + '&#x200F;'}
+                            ${localizeNumbers(cleanQ || safeLine.replace(/\*/g, '<span class="correct-answer-marker">*</span>'), numFmt)}
                         </b>
                     </div>`;
                 questionCounter++;
@@ -1212,19 +1270,18 @@
                     let isCorrect = textPart.includes('*');
                     
                     textPart = textPart.replace(/\*/g, '<span class="correct-answer-marker" style="display:inline-block; margin:0 3px;">*</span>');
-                    textPart = textPart.replace(/\(([^)]*)\)/g, '&#x200F;(&#x200F;$1&#x200F;)&#x200F;');
+                    textPart = textPart.replace(/\(([^)]*)\)/g, '&#xFF08;$1&#xFF09;');
                     
                     currentOptionsBuffer.push({
                         letter: letterRaw,
-                        text: textPart + '&#x200F;',
+                        text: textPart,
                         isCorrect: isCorrect,
                         rawText: tLine.substring(singleLetterMatch[0].length).replace(/<[^>]*>?/gm, '').trim()
                     });
                     
                 } else {
                     flushOptions(); 
-                    // تطبيق المقاس والخط على النص العادي
-                    let outHtml = `<div style="padding-right: 25px; margin-bottom: 2px; color: #000; font-family: ${fB}; font-size: ${sQ}px; font-weight: 500; clear: both;">${safeLine.replace(/\*/g, '<span class="correct-answer-marker">*</span>')}</div>`;
+                    let outHtml = `<div style="padding-right: 25px; margin-bottom: 2px; color: #000; font-family: ${fB}; font-size: ${sQ}px; font-weight: 500; clear: both;">${localizeNumbers(safeLine.replace(/\*/g, '<span class="correct-answer-marker">*</span>'), numFmt)}</div>`;
                     
                     if (isBuildingQuestion) currentQuestionBuffer += outHtml;
                     else formattedText += outHtml;
@@ -1255,7 +1312,7 @@
                 <td style="width:33%; text-align:center; vertical-align:top; font-size:${sH}px; font-weight:bold; line-height:1.4; color:#000; border: none;">${vf('hR1')}<br>${vf('hR2')}<br>${vf('hEduDept')}<br>${vf('hSchool')}</td>
                 <td style="width:34%; text-align:center; vertical-align:top; border: none;">
                     <img src="${logoBase64}" style="height:90px; max-width:100%; object-fit:contain; margin: 0 auto;">
-                    <div style="margin-top: 4px; font-size:${parseInt(sH)+1}px; font-weight:900; color:#000;">${v('examTitle')}</div>
+                    <div style="margin-top: 4px; font-size:${parseInt(sH)+1}px; font-weight:900; color:#000;">${localizeNumbers(v('examTitle'), numFmt)}</div>
                 </td>
                 <td style="width:33%; text-align:left; vertical-align:top; font-size:${sH}px; font-weight:bold; line-height:1.4; color:#000; border: none;"><div style="display:inline-block; text-align:right;">${vf('hL1')}<br>${vf('hL2')}<br>${vf('hTime')}<br>${vf('hDate')}</div></td>
             </tr>
@@ -1267,7 +1324,6 @@
                 <div style="text-align: center; flex: 1;">${vf('hSection')}</div>
                 ${showTrainer ? `<div style="text-align: left; flex: 1.5;">${vf('hHeaderTrainerName')}</div>` : ''}
             </div>
-            <!-- تثبيت دائرة الدرجة في أقصى اليسار بطريقة آمنة لا تتجاوز الحدود في الـ PDF -->
             <div style="border:2px solid #000; width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink: 0; background-color: #fff; margin-right: 15px; margin-left: 2px;">
                 <div style="width: 25px; border-top: 1.5px solid #000;"></div>
             </div>
